@@ -1,10 +1,8 @@
 from operation import AdressBook, Record, Name, Phone
 
+
 adress_book = AdressBook()
 
-contacts = {'Ilia': ['+22332'],
-            'Boris': ['+2121414', '+23124411'],
-            'Vlad': ['+4345333']}
 
 def input_error(func):
     def inner(*args):
@@ -13,6 +11,7 @@ def input_error(func):
         except IndexError:
             return 'Not enough params. Type help.'
     return inner
+
 
 @input_error
 def list_of_params(*args):
@@ -34,26 +33,33 @@ Remove contact ----- enter /remove [Name]
 For exit ----------- enter .
 """
 
+
 def hello(*args):
     return 'How can I help you? For more information - enter /help'
+
 
 @input_error
 def add(*args):
     lst = list_of_params(*args)
     if len(lst) == 2:
+            
         name = Name(lst[0])
         numb_of_phone = Phone(int(lst[1]))
         new_contact = Record(name, numb_of_phone)
 
-        adress_book.add_contact(new_contact)
+        if lst[0] in [k for k in adress_book.keys()]:
+            
+            val = adress_book.get(lst[0])
+            if lst[1] in [str(i) for i in val.phones]:
+                    return f'This number is alredy yet in contact {name}'
+            
+            val.add_phone(Phone(int(lst[1])))
+            return f'Contact {name} was update'
+
+        if not lst[0] in [k for k in adress_book.keys()]:
+            adress_book.add_contact(new_contact)
+            return f'Contact {name} was added'
         
-        # if name in AdressBook():
-        #     contacts[name].extend(numb_of_phone)
-        #     return f'Contact {name} was update'
-        
-        # elif not name in contacts:
-        #     contacts.update({name: numb_of_phone})
-        #     return f'Contact {name} was added'
     else:
         raise IndexError
 
@@ -61,11 +67,14 @@ def add(*args):
 def exit(*args):
     return 'Bye'
 
+
 def no_command(*args):
     return 'Unknown command. Try again'
 
+
 def show_all(*args):
-    return '\n'.join([f'{k}: {v.phone}' for k, v in adress_book.items()])
+    return '\n'.join([f'{k}: {v.phones}' for k, v in adress_book.items()])
+
 
 @input_error
 def get_number(*args):
@@ -73,25 +82,28 @@ def get_number(*args):
     
     for k, v in adress_book.items():
         if lst[0] == k:
-            return f'{lst[0]}: {v.phone}'
+            return f'{lst[0]}: {v.phones}'
         
     return f'Not contacts {lst[0]}'
+
 
 @input_error
 def change_contact(*args):
     lst = list_of_params(*args)
-    if len(lst) == 2:
-        for k, v in adress_book.items():
-            if k == lst[0]:
-                contact = Record(Name[k], Phone(int(lst[1])))
-                adress_book.update({contact.name.value: contact})
+
+    if len(lst) == 3:
+        if lst[0] in [k for k in adress_book.keys()]:
+            adress_book.get(lst[0]).change_phone(Phone(int(lst[1])), Phone(int(lst[2])))
         return f'Contact {lst[0]} was change'
+    
     else:
         raise IndexError
 
+
 def remove_contact(*args):
-    contacts.pop(args[0])
+    adress_book.pop(args[0])
     return f'Contact {args[0]} was deleted'
+
 
 COMMANDS = {help: '/help',
             add: '/add',
@@ -104,23 +116,28 @@ COMMANDS = {help: '/help',
 
 
 def command_handler(text: str):
+
     for command, kword in COMMANDS.items():
         if text.startswith(kword):
             return command, text.replace(kword, '').strip()
+        
     return no_command, None
 
+
 def main():
+
     while True:
 
         user_input = input('>>> ')
         if user_input in ('.', 'good bye', 'close', 'exit'):
             print(exit())
             break
+
         command, data = command_handler(user_input)
         print(command(data))
-        # if command == exit:
-        #     break
+
+
 
 if __name__ == '__main__':
     main()
-    print(adress_book)
+
